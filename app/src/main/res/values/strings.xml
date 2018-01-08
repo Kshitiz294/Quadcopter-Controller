@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">QuadCopter Controller</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="automatic">Automatic</string>
+    <string name="manual">Manual</string>
+    <string name="send">Send</string>
+    <string name="title_activity_splash">Splash</string>
+</resources>

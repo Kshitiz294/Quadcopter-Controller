@@ -1,0 +1,127 @@
+package com.rgw3d.multiwiicontroller;
+
+import android.app.Application;
+import android.os.Build;
+import android.util.Log;
+
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
+
+public class Common extends Application {
+
+    private String LOG_TAG= Common.class.getSimpleName();
+
+    public static boolean isConnected = false;
+
+    private static WebSocketClient mWebSocketClient;
+
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                getConnected();
+            }
+        }).start();
+    }
+
+    private void getConnected(){
+        while(!isConnected) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    isConnected = connectWebSocket();
+                }
+            }).start();
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        //sendData(100);
+    }
+
+    private boolean connectWebSocket() {
+        URI uri;
+        try {
+            uri = new URI("ws://192.168.42.1:80/chatsocket");
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            return false;
+        }
+        mWebSocketClient = new WebSocketClient(uri) {
+            @Override
+            public void onOpen(ServerHandshake serverHandshake) {
+                Log.i("Websocket", "Opened");
+                JSONObject request= new JSONObject();
+                try {
+                    request.put("action","mainControllerRequest");
+                    mWebSocketClient.send(request.toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onMessage(String s) {
+                Log.i("Websocket","Got Message: " + s);
+            }
+
+            @Override
+            public void onClose(int i, String s, boolean b) {
+                Log.i("Websocket", "Closed " + s);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.i("Websocket", "Error " + e.getMessage());
+            }
+        };
+
+        try {
+            return mWebSocketClient.connectBlocking();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private void sendData(int milliseconds){
+        while(isConnected) {
+            //sendMessage();
+            Log.d("sending message","send message at millisecond time");
+            try {
+                Thread.sleep(milliseconds);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+                /*new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                    }
+                }).start();
+                try {
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                */
+        }
+    }
+
+    public static void sendMessage(String message) {
+        if(isConnected){
+            mWebSocketClient.send(message);
+        }
+    }
+
+}
